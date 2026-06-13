@@ -5,6 +5,7 @@ from telegram import Bot
 from telegram.error import TelegramError
 from app.db.database import SessionLocal, init_db
 from app.db.models import DailyQueue, SentProduct
+from app.services.monitor_service import Monitor
 
 TELEGRAM_BOT_TOKEN  = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHANNEL_ID = os.getenv("TELEGRAM_CHANNEL_ID")
@@ -36,9 +37,10 @@ async def send_product(bot: Bot, item: DailyQueue) -> bool:
 
 async def run_sender():
     init_db()
-    db          = SessionLocal()
-    bot         = Bot(token=TELEGRAM_BOT_TOKEN)
-    today       = str(date.today())
+    db           = SessionLocal()
+    bot          = Bot(token=TELEGRAM_BOT_TOKEN)
+    monitor      = Monitor()
+    today        = str(date.today())
     current_time = datetime.now().strftime("%H:%M")
 
     print(f"\n📤 Sender — {current_time}")
@@ -50,11 +52,16 @@ async def run_sender():
     ).all()
 
     if not items:
+        monitor.log_sender_empty(current_time)
         print(f"  ℹ️ Sem itens para {current_time}")
         db.close()
         return
 
+    monitor.log_sender_start(current_time, len(items))
     print(f"  📦 {len(items)} produtos a enviar")
+
+    sent_count   = 0
+    failed_count = 0
 
     for item in items:
         success = await send_product(bot, item)
@@ -66,11 +73,14 @@ async def run_sender():
                 message_text = item.message_telegram
             ))
             db.commit()
+            sent_count += 1
             print(f"  ✅ {item.title_short}")
             await asyncio.sleep(DELAY_SECONDS)
         else:
+            failed_count += 1
             print(f"  ❌ Falhou: {item.asin}")
 
+    monitor.log_sender_finish(sent_count, failed_count)
     db.close()
     print("✅ Sender concluído!")
 
