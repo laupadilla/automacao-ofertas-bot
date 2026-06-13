@@ -91,7 +91,7 @@ def run_scraper():
                 break
 
             print(f"  🔍 {keyword}")
-            products = search_products(keyword, max_results=8)
+            products = search_products(keyword, max_results=12)
             time.sleep(random.uniform(8, 15))
 
             for product in products:
