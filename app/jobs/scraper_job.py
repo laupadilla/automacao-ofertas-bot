@@ -6,10 +6,12 @@ from datetime import datetime, date, timedelta
 from anthropic import Anthropic
 from app.db.database import SessionLocal, init_db
 from app.db.models import Product, SentProduct, DailyQueue
-from app.services.amazon_service import search_products
+from app.services.amazon_service import search_products as amazon_search
+from app.services.mercadolivre_service import search_products as ml_search
 from app.services.ai_service import format_product_message
 
-CATEGORIES = {
+# Categorias Amazon (15 produtos)
+AMAZON_CATEGORIES = {
     "Eletrônicos": [
         "fone bluetooth", "smartwatch", "carregador portatil",
         "cabo usb-c", "caixa de som bluetooth", "headphone",
@@ -22,12 +24,32 @@ CATEGORIES = {
     ],
     "Beleza": [
         "protetor solar facial", "creme hidratante", "escova cabelo",
-        "kit skincare", "perfume feminino", "shampoo", "condicionador",
-        "sérum facial", "batom", "mascara cabelo"
+        "kit skincare", "perfume feminino", "shampoo",
+        "serum facial", "batom", "mascara cabelo", "condicionador"
     ]
 }
 
-SCHEDULED_TIMES  = ["07:30", "12:00", "18:30", "21:00"]
+# Categorias Mercado Livre (15 produtos)
+ML_CATEGORIES = {
+    "Eletrônicos ML": [
+        "fone de ouvido bluetooth", "relogio smartwatch",
+        "carregador portatil celular", "cabo usb tipo c",
+        "caixa de som portatil", "teclado bluetooth",
+        "mouse sem fio", "webcam full hd"
+    ],
+    "Casa e Cozinha ML": [
+        "air fryer digital", "panela eletrica",
+        "jogo panelas antiaderente", "cafeteira eletrica",
+        "fritadeira sem oleo", "liquidificador potente"
+    ],
+    "Moda e Esporte ML": [
+        "tenis feminino", "mochila escolar",
+        "kit maquiagem", "perfume importado",
+        "suplemento whey protein", "roupa academia"
+    ]
+}
+
+SCHEDULED_TIMES   = ["07:30", "12:00", "18:30", "21:00"]
 PRODUCTS_PER_SLOT = [8, 7, 8, 7]
 
 def already_sent(db, asin: str, channel_id: str, days: int = 30) -> bool:
@@ -64,43 +86,34 @@ def shorten_title(product: dict) -> str:
     )
     return msg.content[0].text.strip()[:60]
 
-def run_scraper():
-    init_db()
-    db = SessionLocal()
-    today = str(date.today())
-    channel_id = os.getenv("TELEGRAM_CHANNEL_ID", "")
-
-    print(f"\n🚀 Scraper iniciado — {today}")
-
-    # Limpa filas de dias anteriores não enviadas
-    db.query(DailyQueue).filter(
-        DailyQueue.queue_date != today,
-        DailyQueue.sent == False
-    ).delete(synchronize_session=False)
-    db.commit()
-
+def collect_from_source(db, search_fn, categories, target, channel_id, source_name):
+    """Coleta produtos de uma fonte (Amazon ou ML)"""
     collected = []
 
-    for category, keywords in CATEGORIES.items():
-        print(f"\n📦 Categoria: {category}")
+    for category, keywords in categories.items():
+        print(f"\n  📦 [{source_name}] {category}")
         random.shuffle(keywords)
 
         for keyword in keywords:
             cat_count = len([p for p in collected if p["category"] == category])
-            if cat_count >= 10:
+            if cat_count >= 5:
                 break
 
-            print(f"  🔍 {keyword}")
-            products = search_products(keyword, max_results=12)
-            time.sleep(random.uniform(8, 15))
+            if len(collected) >= target:
+                break
+
+            print(f"    🔍 {keyword}")
+            products = search_fn(keyword, max_results=8)
+            time.sleep(random.uniform(2, 4))
 
             for product in products:
                 asin = product["asin"]
-
+                if not asin:
+                    continue
                 if product["discount"] < 10:
                     continue
                 if already_sent(db, asin, channel_id, days=30):
-                    print(f"    ⏭️ {asin} já enviado recentemente")
+                    print(f"    ⏭️ {asin} já enviado")
                     continue
                 if in_todays_queue(db, asin):
                     continue
@@ -113,17 +126,17 @@ def run_scraper():
                     existing.updated_at = datetime.utcnow()
                 else:
                     db.add(Product(
-                        asin          = asin,
-                        title         = product["title"],
-                        price         = product["price"],
-                        original_price= product["original_price"],
-                        discount      = product["discount"],
-                        rating        = product["rating"],
-                        review_count  = product["review_count"],
-                        category      = category,
-                        image_url     = product["image_url"],
-                        affiliate_url = product["affiliate_url"],
-                        features      = json.dumps(product.get("features", []))
+                        asin           = asin,
+                        title          = product["title"],
+                        price          = product["price"],
+                        original_price = product["original_price"],
+                        discount       = product["discount"],
+                        rating         = product["rating"],
+                        review_count   = product["review_count"],
+                        category       = category,
+                        image_url      = product["image_url"],
+                        affiliate_url  = product["affiliate_url"],
+                        features       = json.dumps(product.get("features", []))
                     ))
                 db.commit()
 
@@ -131,19 +144,58 @@ def run_scraper():
                 collected.append(product)
                 break
 
-        if len(collected) >= 30:
+        if len(collected) >= target:
             break
 
-    print(f"\n✅ {len(collected)} produtos coletados")
+    return collected
+
+def run_scraper():
+    init_db()
+    db         = SessionLocal()
+    today      = str(date.today())
+    channel_id = os.getenv("TELEGRAM_CHANNEL_ID", "")
+
+    print(f"\n🚀 Scraper iniciado — {today}")
+
+    # Limpa filas antigas não enviadas
+    db.query(DailyQueue).filter(
+        DailyQueue.queue_date != today,
+        DailyQueue.sent == False
+    ).delete(synchronize_session=False)
+    db.commit()
+
+    # Coleta 15 da Amazon + 15 do ML
+    print("\n🛒 Coletando Amazon...")
+    amazon_products = collect_from_source(
+        db, amazon_search, AMAZON_CATEGORIES,
+        target=15, channel_id=channel_id, source_name="Amazon"
+    )
+
+    print("\n🛍️ Coletando Mercado Livre...")
+    ml_products = collect_from_source(
+        db, ml_search, ML_CATEGORIES,
+        target=15, channel_id=channel_id, source_name="ML"
+    )
+
+    # Intercala Amazon e ML na lista final
+    all_products = []
+    for i in range(max(len(amazon_products), len(ml_products))):
+        if i < len(amazon_products):
+            all_products.append(amazon_products[i])
+        if i < len(ml_products):
+            all_products.append(ml_products[i])
+
+    print(f"\n✅ {len(all_products)} produtos coletados")
+    print(f"   Amazon: {len(amazon_products)} | ML: {len(ml_products)}")
     print("🤖 Gerando mensagens com IA...\n")
 
     slot_index = 0
     slot_count = 0
 
-    for product in collected[:30]:
+    for product in all_products[:30]:
         try:
-            formatted    = format_product_message(product, "telegram")
-            title_short  = shorten_title(product)
+            formatted   = format_product_message(product, "telegram")
+            title_short = shorten_title(product)
         except Exception as e:
             print(f"  ⚠️ Erro IA {product['asin']}: {e}")
             continue
@@ -168,8 +220,9 @@ def run_scraper():
             sent             = False
         ))
 
-        print(f"  ✅ [{scheduled_time}] {title_short}")
+        source = "🛒" if product.get("source") != "mercadolivre" else "🛍️"
+        print(f"  ✅ {source} [{scheduled_time}] {title_short}")
 
     db.commit()
     db.close()
-    print("\n🎉 Fila do dia montada!")
+    print(f"\n🎉 Fila do dia montada!")
