@@ -142,3 +142,4 @@ def search_products(keyword: str, max_results: int = 8) -> list:
                 image_url = ""
                 img_el = item.select_one("img.ui-search-result-image__element")
                 if img_el:
+                    image_url = img_el.get("data-src") or img_el.get("src", "")
