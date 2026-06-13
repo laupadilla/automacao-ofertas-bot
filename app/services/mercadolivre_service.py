@@ -143,4 +143,31 @@ def search_products(keyword: str, max_results: int = 8) -> list:
                 img_el = item.select_one("img.ui-search-result-image__element")
                 if img_el:
                     image_url = img_el.get("data-src") or img_el.get("src", "")
-                    
+
+                if price and discount >= 10:
+                    products.append({
+                        "id": product_id or title[:20],
+                        "asin": product_id,
+                        "title": title,
+                        "price": price,
+                        "original_price": original_price or price,
+                        "discount": discount,
+                        "rating": rating,
+                        "review_count": review_count,
+                        "category": "Mercado Livre",
+                        "image_url": image_url,
+                        "affiliate_url": build_affiliate_url(product_url),
+                        "is_available": True,
+                        "features": [],
+                        "source": "mercadolivre"
+                    })
+
+            except Exception as e:
+                print(f"  Erro ao processar item ML: {e}")
+                continue
+
+        return products
+
+    except Exception as e:
+        print(f"  Erro na busca ML: {e}")
+        return []
