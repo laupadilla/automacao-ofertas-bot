@@ -62,6 +62,11 @@ def search_products(keyword: str, max_results: int = 5) -> list:
             timeout=15
         )
 
+        if response.status_code == 503:
+            print(f"  ⚠️ 503 em {keyword}, aguardando 30s e tentando novamente...")
+            time.sleep(30)
+            response = requests.get(search_url, headers=get_headers(), timeout=15)
+
         if response.status_code != 200:
             print(f"Status {response.status_code} ao buscar: {keyword}")
             return []

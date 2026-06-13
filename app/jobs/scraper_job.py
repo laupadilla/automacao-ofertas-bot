@@ -12,15 +12,18 @@ from app.services.ai_service import format_product_message
 CATEGORIES = {
     "Eletrônicos": [
         "fone bluetooth", "smartwatch", "carregador portatil",
-        "cabo usb-c", "caixa de som bluetooth"
+        "cabo usb-c", "caixa de som bluetooth", "headphone",
+        "tablet", "teclado sem fio", "mouse gamer", "webcam"
     ],
     "Casa e Cozinha": [
         "air fryer", "panela pressao eletrica", "organizer cozinha",
-        "jogo de panelas", "porta temperos"
+        "jogo de panelas", "porta temperos", "fritadeira eletrica",
+        "liquidificador", "cafeteira", "escorredor", "pote hermetico"
     ],
     "Beleza": [
         "protetor solar facial", "creme hidratante", "escova cabelo",
-        "kit skincare", "perfume feminino"
+        "kit skincare", "perfume feminino", "shampoo", "condicionador",
+        "sérum facial", "batom", "mascara cabelo"
     ]
 }
 
@@ -89,7 +92,7 @@ def run_scraper():
 
             print(f"  🔍 {keyword}")
             products = search_products(keyword, max_results=8)
-            time.sleep(random.uniform(3, 6))
+            time.sleep(random.uniform(8, 15))
 
             for product in products:
                 asin = product["asin"]
