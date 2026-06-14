@@ -1,0 +1,408 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Achados no Precinho</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #0a1a0f;
+    color: #ffffff;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    position: relative;
+    background: radial-gradient(ellipse at top, #0f3320 0%, #0a1a0f 60%);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #1b4d2e;
+    border: 1px solid #2d7a47;
+    color: #4ade80;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 6px 16px;
+    border-radius: 100px;
+    margin-bottom: 2rem;
+    letter-spacing: 0.3px;
+  }
+
+  .badge-dot {
+    width: 7px;
+    height: 7px;
+    background: #4ade80;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .logo {
+    font-size: 52px;
+    margin-bottom: 1rem;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 1.25rem;
+    letter-spacing: -1px;
+  }
+
+  h1 span {
+    color: #4ade80;
+  }
+
+  .subtitle {
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+    color: #9ca3af;
+    max-width: 480px;
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+  }
+
+  .cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: #4ade80;
+    color: #0a1a0f;
+    font-size: 1.05rem;
+    font-weight: 700;
+    padding: 16px 36px;
+    border-radius: 100px;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-bottom: 1rem;
+    letter-spacing: -0.2px;
+  }
+
+  .cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(74, 222, 128, 0.3);
+  }
+
+  .cta-icon { font-size: 1.2rem; }
+
+  .cta-sub {
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 3rem;
+  }
+
+  .stats {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 4rem;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-number {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #4ade80;
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 4px;
+  }
+
+  .divider {
+    width: 1px;
+    height: 40px;
+    background: #1f2d23;
+    align-self: center;
+  }
+
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    max-width: 680px;
+    width: 100%;
+    margin-bottom: 4rem;
+  }
+
+  .feature-card {
+    background: #0f2218;
+    border: 1px solid #1b3a25;
+    border-radius: 16px;
+    padding: 1.25rem;
+    text-align: left;
+  }
+
+  .feature-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+
+  .feature-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #f0fdf4;
+    margin-bottom: 4px;
+  }
+
+  .feature-desc {
+    font-size: 0.8rem;
+    color: #6b7280;
+    line-height: 1.5;
+  }
+
+  .preview {
+    background: #0f2218;
+    border: 1px solid #1b3a25;
+    border-radius: 20px;
+    padding: 1.5rem;
+    max-width: 340px;
+    width: 100%;
+    margin-bottom: 4rem;
+    text-align: left;
+  }
+
+  .preview-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #1b3a25;
+  }
+
+  .preview-avatar {
+    width: 36px;
+    height: 36px;
+    background: #1b4d2e;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .preview-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #f0fdf4;
+  }
+
+  .preview-members {
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+
+  .preview-msg {
+    background: #1b3a25;
+    border-radius: 12px 12px 12px 4px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .preview-msg-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #4ade80;
+    margin-bottom: 4px;
+  }
+
+  .preview-msg-text {
+    font-size: 0.78rem;
+    color: #d1fae5;
+    line-height: 1.5;
+  }
+
+  .preview-time {
+    font-size: 10px;
+    color: #6b7280;
+    text-align: right;
+    margin-top: 4px;
+  }
+
+  .social-proof {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4rem;
+  }
+
+  .avatars {
+    display: flex;
+  }
+
+  .avatar-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid #0a1a0f;
+    margin-left: -8px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+  }
+
+  .social-text {
+    font-size: 13px;
+    color: #9ca3af;
+  }
+
+  .social-text strong {
+    color: #f0fdf4;
+  }
+
+  .footer {
+    padding: 2rem;
+    text-align: center;
+    border-top: 1px solid #1b3a25;
+  }
+
+  .footer p {
+    font-size: 12px;
+    color: #4b5563;
+  }
+</style>
+</head>
+<body>
+
+<section class="hero">
+
+  <div class="badge">
+    <span class="badge-dot"></span>
+    Ofertas atualizadas todo dia
+  </div>
+
+  <div class="logo">🔥</div>
+
+  <h1>Economize de verdade<br>todo <span>dia</span></h1>
+
+  <p class="subtitle">
+    Garimpamos as melhores ofertas da Amazon e entregamos direto no seu celular — gratuitamente.
+  </p>
+
+  <a href="https://t.me/+ZbZXai8kx704NjNh" class="cta-btn" target="_blank">
+    <span class="cta-icon">✈️</span>
+    Entrar no grupo grátis
+  </a>
+
+  <p class="cta-sub">Gratuito. Sem spam. Saia quando quiser.</p>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-number">90%</div>
+      <div class="stat-label">desconto máximo</div>
+    </div>
+    <div class="divider"></div>
+    <div class="stat">
+      <div class="stat-number">4x</div>
+      <div class="stat-label">ofertas por dia</div>
+    </div>
+    <div class="divider"></div>
+    <div class="stat">
+      <div class="stat-number">100%</div>
+      <div class="stat-label">gratuito</div>
+    </div>
+  </div>
+
+  <div class="features">
+    <div class="feature-card">
+      <span class="feature-icon">⚡</span>
+      <div class="feature-title">Alertas instantâneos</div>
+      <div class="feature-desc">Receba as melhores ofertas direto no Telegram antes de todo mundo</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🛒</span>
+      <div class="feature-title">Amazon verificada</div>
+      <div class="feature-desc">Só produtos reais com avaliações acima de 4 estrelas e desconto real</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🤖</span>
+      <div class="feature-title">Seleção com IA</div>
+      <div class="feature-desc">Inteligência artificial filtra as ofertas mais relevantes para você</div>
+    </div>
+  </div>
+
+  <div class="preview">
+    <div class="preview-header">
+      <div class="preview-avatar">🔥</div>
+      <div>
+        <div class="preview-name">Achados no Precinho</div>
+        <div class="preview-members">canal de ofertas</div>
+      </div>
+    </div>
+
+    <div class="preview-msg">
+      <div class="preview-msg-title">Oferta do dia 🚨</div>
+      <div class="preview-msg-text">
+        Fone Sony WH-1000XM5<br>
+        de R$ 1.999 por 🔥 R$ 1.197 🔥<br>
+        40% OFF! Saindo agora 😵⚡
+      </div>
+      <div class="preview-time">07:30</div>
+    </div>
+
+    <div class="preview-msg">
+      <div class="preview-msg-title">Achado do almoço ☀️</div>
+      <div class="preview-msg-text">
+        Air Fryer Philco 4L<br>
+        de R$ 349 por 🔥 R$ 219 🔥<br>
+        37% OFF! Estoque limitado 🚨
+      </div>
+      <div class="preview-time">12:00</div>
+    </div>
+  </div>
+
+  <div class="social-proof">
+    <div class="avatars">
+      <div class="avatar-circle" style="background:#1b4d2e; color:#4ade80;">M</div>
+      <div class="avatar-circle" style="background:#1a3a5c; color:#60a5fa;">J</div>
+      <div class="avatar-circle" style="background:#3a1a2e; color:#f472b6;">A</div>
+      <div class="avatar-circle" style="background:#3a2a0f; color:#fbbf24;">R</div>
+    </div>
+    <p class="social-text">Junte-se a quem já está <strong>economizando todo dia</strong></p>
+  </div>
+
+  <a href="https://t.me/+ZbZXai8kx704NjNh" class="cta-btn" target="_blank">
+    <span class="cta-icon">✈️</span>
+    Quero economizar agora
+  </a>
+
+</section>
+
+<footer class="footer">
+  <p>Achados no Precinho © 2026 · Somos associados Amazon e podemos receber comissão pelas compras</p>
+</footer>
+
+</body>
+</html>
