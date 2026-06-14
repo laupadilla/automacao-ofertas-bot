@@ -106,3 +106,4 @@ class Monitor:
 
     def log_sender_empty(self, time_slot: str):
         self._send(f"ℹ️ *Sender {time_slot}* — nenhum produto na fila")
+        
